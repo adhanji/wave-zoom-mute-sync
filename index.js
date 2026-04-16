@@ -22,7 +22,11 @@ function toggleZoomMute() {
   console.log('[wave-zoom-sync] Mute button pressed — toggling Zoom mute');
   execFile('osascript', [
     '-e', 'tell application "System Events"',
-    '-e', 'if exists (processes where name is "zoom.us") then keystroke "a" using {shift down, command down}',
+    '-e', 'if exists (processes where name is "zoom.us") then',
+    '-e', '  tell process "zoom.us"',
+    '-e', '    keystroke "a" using {shift down, command down}',
+    '-e', '  end tell',
+    '-e', 'end if',
     '-e', 'end tell',
   ], (err) => {
     if (err) console.error('[wave-zoom-sync] Failed to toggle Zoom mute:', err.message);
