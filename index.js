@@ -17,6 +17,22 @@ const { execFile } = require('child_process');
 
 const WAVELINK_URL = 'ws://127.0.0.1:1824';
 const RECONNECT_DELAY_MS = 5000;
+const ZOOM_POLL_INTERVAL_MS = 5000;
+
+let zoomRunning = false;
+
+function pollZoomStatus() {
+  execFile('pgrep', ['-x', 'zoom.us'], (err) => {
+    const nowRunning = !err;
+    if (nowRunning !== zoomRunning) {
+      zoomRunning = nowRunning;
+      console.log(`[wave-zoom-sync] Zoom ${zoomRunning ? 'opened' : 'closed'} — mute sync ${zoomRunning ? 'enabled' : 'disabled'}`);
+    }
+  });
+}
+
+pollZoomStatus();
+setInterval(pollZoomStatus, ZOOM_POLL_INTERVAL_MS);
 
 function toggleZoomMute() {
   console.log('[wave-zoom-sync] Mute button pressed — toggling Zoom mute');
@@ -55,7 +71,9 @@ function connect() {
       msg.method === 'microphoneConfigChanged' &&
       msg.params?.property === 'Microphone Mute'
     ) {
-      toggleZoomMute();
+      if (zoomRunning) {
+        toggleZoomMute();
+      }
     }
   });
 
